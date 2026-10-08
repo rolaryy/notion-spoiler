@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Steam 风格剧透</title>
+<style>
+  :root {
+    --bar: #181818;
+    --bar-hover: #292929;
+    --text: #222;
+    --hint: #777;
+    --max-width: 760px;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    padding: 10px 14px;
+    background: transparent;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
+                 "Noto Sans SC", "Microsoft YaHei", sans-serif;
+    color: var(--text);
+    font-size: 16px;
+  }
+
+  .spoiler-wrap {
+    width: 100%;
+    max-width: var(--max-width);
+  }
+
+  .spoiler {
+    display: block;
+    width: fit-content;
+    max-width: 100%;
+    cursor: pointer;
+    user-select: none;
+    line-height: 1.8;
+    outline: none;
+  }
+
+  /*
+    使用背景渐变而不是固定宽度伪元素：
+    - 短文字：黑条自动等于文字宽度
+    - 长文字：随换行自动覆盖每一行
+    - 不需要预先计算字符串长度
+  */
+  .spoiler-text {
+    display: inline;
+    color: var(--text);
+    background:
+      linear-gradient(var(--bar), var(--bar)) 0 0 /
+      100% 100% no-repeat;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+    border-radius: 2px;
+    padding: 0 3px;
+    transition: background .12s ease;
+  }
+
+  .spoiler:hover .spoiler-text {
+    background:
+      linear-gradient(var(--bar-hover), var(--bar-hover)) 0 0 /
+      100% 100% no-repeat;
+  }
+
+  .spoiler.revealed .spoiler-text {
+    background: transparent;
+  }
+
+  .spoiler-label {
+    display: inline-block;
+    margin-left: 7px;
+    font-size: 11px;
+    color: var(--hint);
+    vertical-align: middle;
+    opacity: .8;
+  }
+
+  .spoiler.revealed .spoiler-label {
+    opacity: .45;
+  }
+
+  .error {
+    color: #888;
+    font-size: 13px;
+  }
+
+  @media (max-width: 600px) {
+    body {
+      padding: 8px 10px;
+      font-size: 15px;
+    }
+  }
+</style>
+</head>
+
+<body>
+<div class="spoiler-wrap">
+  <span id="container"></span>
+</div>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+const text = params.get("text");
+const label = params.get("label") || "剧透";
+
+const container = document.getElementById("container");
+
+if (text === null || text === "") {
+  container.innerHTML =
+    '<span class="error">请在 URL 后添加 ?text=要隐藏的文字</span>';
+} else {
+  const spoiler = document.createElement("span");
+  spoiler.className = "spoiler";
+  spoiler.setAttribute("role", "button");
+  spoiler.setAttribute("tabindex", "0");
+  spoiler.setAttribute("aria-label", "剧透内容，点击显示");
+
+  const content = document.createElement("span");
+  content.className = "spoiler-text";
+
+  // textContent 防止 URL 参数中的 HTML 被当作代码执行
+  content.textContent = text;
+
+  const labelEl = document.createElement("span");
+  labelEl.className = "spoiler-label";
+  labelEl.textContent = label;
+
+  spoiler.appendChild(content);
+  spoiler.appendChild(labelEl);
+  container.appendChild(spoiler);
+
+  function toggle() {
+    spoiler.classList.toggle("revealed");
+    const hidden = !spoiler.classList.contains("revealed");
+    spoiler.setAttribute(
+      "aria-label",
+      hidden ? "剧透内容，点击显示" : "剧透内容，点击隐藏"
+    );
+  }
+
+  spoiler.addEventListener("click", toggle);
+
+  spoiler.addEventListener("keydown", e => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      toggle();
+    }
+  });
+}
+</script>
+</body>
+</html>
