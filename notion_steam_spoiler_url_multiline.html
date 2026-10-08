@@ -2,154 +2,514 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Steam 风格剧透</title>
+
+<meta name="viewport"
+      content="width=device-width,
+               initial-scale=1.0">
+
+<title>Steam Spoiler</title>
+
 <style>
-  :root {
-    --bar: #181818;
-    --bar-hover: #292929;
-    --text: #222;
-    --hint: #777;
-    --max-width: 760px;
-  }
 
-  * { box-sizing: border-box; }
-
-  body {
-    margin: 0;
-    padding: 10px 14px;
-    background: transparent;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
-                 "Noto Sans SC", "Microsoft YaHei", sans-serif;
-    color: var(--text);
-    font-size: 16px;
-  }
-
-  .spoiler-wrap {
-    width: 100%;
-    max-width: var(--max-width);
-  }
-
-  .spoiler {
-    display: block;
-    width: fit-content;
-    max-width: 100%;
-    cursor: pointer;
-    user-select: none;
-    line-height: 1.8;
-    outline: none;
-  }
-
-  /*
-    使用背景渐变而不是固定宽度伪元素：
-    - 短文字：黑条自动等于文字宽度
-    - 长文字：随换行自动覆盖每一行
-    - 不需要预先计算字符串长度
-  */
-  .spoiler-text {
-    display: inline;
-    color: var(--text);
-    background:
-      linear-gradient(var(--bar), var(--bar)) 0 0 /
-      100% 100% no-repeat;
-    box-decoration-break: clone;
-    -webkit-box-decoration-break: clone;
-    border-radius: 2px;
-    padding: 0 3px;
-    transition: background .12s ease;
-  }
-
-  .spoiler:hover .spoiler-text {
-    background:
-      linear-gradient(var(--bar-hover), var(--bar-hover)) 0 0 /
-      100% 100% no-repeat;
-  }
-
-  .spoiler.revealed .spoiler-text {
-    background: transparent;
-  }
-
-  .spoiler-label {
-    display: inline-block;
-    margin-left: 7px;
-    font-size: 11px;
-    color: var(--hint);
-    vertical-align: middle;
-    opacity: .8;
-  }
-
-  .spoiler.revealed .spoiler-label {
-    opacity: .45;
-  }
-
-  .error {
-    color: #888;
-    font-size: 13px;
-  }
-
-  @media (max-width: 600px) {
-    body {
-      padding: 8px 10px;
-      font-size: 15px;
+    * {
+        box-sizing: border-box;
     }
-  }
+
+    html,
+    body {
+        margin: 0;
+        padding: 0;
+
+        background: transparent;
+    }
+
+    body {
+        margin: 0;
+
+        font-family:
+            -apple-system,
+            BlinkMacSystemFont,
+            "Segoe UI",
+            "Microsoft YaHei",
+            "PingFang SC",
+            Arial,
+            sans-serif;
+
+        font-size: 16px;
+        line-height: 1.6;
+
+        color: #d6d7d8;
+
+        /*
+         * 防止英文、数字、长 URL 等撑破 Notion iframe
+         */
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+
+
+    /*
+     * ==========================================================
+     * 主文字容器
+     * ==========================================================
+     */
+
+    #content {
+        width: 100%;
+
+        /*
+         * 保留 URL 中的换行
+         */
+        white-space: pre-wrap;
+
+        /*
+         * 长文本自动换行
+         */
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+
+
+    /*
+     * ==========================================================
+     * Steam 风格黑条
+     * ==========================================================
+     */
+
+    .spoiler {
+
+        /*
+         * inline 是关键。
+         *
+         * 黑条会像普通文字一样嵌入段落：
+         *
+         * 正常文字 [黑条] 正常文字
+         */
+        display: inline;
+
+        /*
+         * 黑色背景
+         */
+        background-color: #181a1d;
+
+        /*
+         * 隐藏文字
+         */
+        color: #181a1d;
+
+        /*
+         * Steam 风格轻微圆角
+         */
+        border-radius: 2px;
+
+        /*
+         * 左右略微增加空间
+         */
+        padding-left: 0.15em;
+        padding-right: 0.15em;
+
+        /*
+         * 点击手势
+         */
+        cursor: pointer;
+
+        /*
+         * 默认不能直接选择隐藏文字
+         */
+        user-select: none;
+
+        /*
+         * 动画
+         */
+        transition:
+            background-color 0.12s ease,
+            color 0.12s ease;
+    }
+
+
+    /*
+     * 鼠标移动到黑条上
+     */
+
+    .spoiler:hover {
+
+        background-color: #292c30;
+
+    }
+
+
+    /*
+     * ==========================================================
+     * 已经展开的黑条
+     * ==========================================================
+     */
+
+    .spoiler.revealed {
+
+        /*
+         * 恢复正常背景
+         */
+        background-color: transparent;
+
+        /*
+         * 恢复正常文字颜色
+         */
+        color: inherit;
+
+        /*
+         * 展开后允许选择文字
+         */
+        user-select: text;
+    }
+
+
+    /*
+     * 已展开文字的 hover 效果
+     */
+
+    .spoiler.revealed:hover {
+
+        background-color: rgba(255,255,255,0.05);
+
+    }
+
+
+    /*
+     * ==========================================================
+     * 空白剧透
+     * ==========================================================
+     *
+     * [spoiler][/spoiler]
+     *
+     * 也可以正常显示。
+     */
+
+    .spoiler.empty {
+
+        min-width: 1em;
+
+    }
+
 </style>
 </head>
 
+
 <body>
-<div class="spoiler-wrap">
-  <span id="container"></span>
-</div>
+
+<div id="content"></div>
+
 
 <script>
-const params = new URLSearchParams(window.location.search);
-const text = params.get("text");
-const label = params.get("label") || "剧透";
 
-const container = document.getElementById("container");
+(function () {
 
-if (text === null || text === "") {
-  container.innerHTML =
-    '<span class="error">请在 URL 后添加 ?text=要隐藏的文字</span>';
-} else {
-  const spoiler = document.createElement("span");
-  spoiler.className = "spoiler";
-  spoiler.setAttribute("role", "button");
-  spoiler.setAttribute("tabindex", "0");
-  spoiler.setAttribute("aria-label", "剧透内容，点击显示");
 
-  const content = document.createElement("span");
-  content.className = "spoiler-text";
+    /*
+     * ==========================================================
+     * 获取 URL 参数
+     * ==========================================================
+     *
+     * 例如：
+     *
+     * ?text=这是正常文字[spoiler]这是剧透[/spoiler]继续正常文字
+     *
+     */
 
-  // textContent 防止 URL 参数中的 HTML 被当作代码执行
-  content.textContent = text;
+    const params =
+        new URLSearchParams(
+            window.location.search
+        );
 
-  const labelEl = document.createElement("span");
-  labelEl.className = "spoiler-label";
-  labelEl.textContent = label;
 
-  spoiler.appendChild(content);
-  spoiler.appendChild(labelEl);
-  container.appendChild(spoiler);
+    const text =
+        params.get("text") || "";
 
-  function toggle() {
-    spoiler.classList.toggle("revealed");
-    const hidden = !spoiler.classList.contains("revealed");
-    spoiler.setAttribute(
-      "aria-label",
-      hidden ? "剧透内容，点击显示" : "剧透内容，点击隐藏"
-    );
-  }
 
-  spoiler.addEventListener("click", toggle);
+    const content =
+        document.getElementById("content");
 
-  spoiler.addEventListener("keydown", e => {
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      toggle();
+
+    /*
+     * ==========================================================
+     * 创建普通文字
+     * ==========================================================
+     */
+
+    function createNormalText(text) {
+
+        return document.createTextNode(text);
+
     }
-  });
-}
+
+
+    /*
+     * ==========================================================
+     * 创建剧透黑条
+     * ==========================================================
+     */
+
+    function createSpoiler(text) {
+
+
+        const spoiler =
+            document.createElement("span");
+
+
+        spoiler.className =
+            "spoiler";
+
+
+        /*
+         * 使用 textContent。
+         *
+         * 不使用 innerHTML。
+         *
+         * 这样即使剧透文字里面出现：
+         *
+         * <script>
+         * <img>
+         * <div>
+         *
+         * 也只会作为普通文字显示。
+         */
+
+        spoiler.textContent = text;
+
+
+        /*
+         * 空剧透处理
+         */
+
+        if (text.length === 0) {
+
+            spoiler.classList.add("empty");
+
+            spoiler.innerHTML = "&nbsp;";
+
+        }
+
+
+        /*
+         * ======================================================
+         * 点击事件
+         * ======================================================
+         *
+         * 每一个黑条都是独立的。
+         *
+         * 点击 A：
+         * A 展开
+         *
+         * 点击 B：
+         * B 展开
+         *
+         * A 不会受到影响。
+         */
+
+        spoiler.addEventListener(
+            "click",
+            function () {
+
+                this.classList.toggle(
+                    "revealed"
+                );
+
+            }
+        );
+
+
+        return spoiler;
+
+    }
+
+
+    /*
+     * ==========================================================
+     * 解析 [spoiler]……[/spoiler]
+     * ==========================================================
+     *
+     * 例如：
+     *
+     * 这是正常文字
+     *
+     * [spoiler]
+     * 这是第一个剧透
+     * [/spoiler]
+     *
+     * 这是正常文字
+     *
+     * [spoiler]
+     * 这是第二个剧透
+     * [/spoiler]
+     *
+     * 最后的正常文字
+     *
+     *
+     * 最终会变成：
+     *
+     * TextNode
+     * Spoiler
+     * TextNode
+     * Spoiler
+     * TextNode
+     *
+     */
+
+    function parseText(text) {
+
+
+        const fragment =
+            document.createDocumentFragment();
+
+
+        /*
+         * ======================================================
+         * 剧透标记
+         * ======================================================
+         *
+         * [spoiler]
+         *
+         *        ↓
+         *
+         * [/spoiler]
+         *
+         *
+         * 使用 [\s\S]
+         * 是为了让剧透内容可以跨越换行。
+         */
+
+        const regex =
+            /\[spoiler\]([\s\S]*?)\[\/spoiler\]/gi;
+
+
+        let lastIndex = 0;
+
+        let match;
+
+
+        /*
+         * ======================================================
+         * 找到所有剧透
+         * ======================================================
+         */
+
+        while (
+            (match = regex.exec(text)) !== null
+        ) {
+
+
+            /*
+             * --------------------------------------------------
+             * 添加剧透之前的普通文字
+             * --------------------------------------------------
+             */
+
+            if (
+                match.index > lastIndex
+            ) {
+
+                const normalText =
+                    text.substring(
+                        lastIndex,
+                        match.index
+                    );
+
+
+                fragment.appendChild(
+                    createNormalText(
+                        normalText
+                    )
+                );
+
+            }
+
+
+            /*
+             * --------------------------------------------------
+             * 创建黑条
+             * --------------------------------------------------
+             */
+
+            const spoilerText =
+                match[1];
+
+
+            fragment.appendChild(
+                createSpoiler(
+                    spoilerText
+                )
+            );
+
+
+            /*
+             * 更新位置
+             */
+
+            lastIndex =
+                regex.lastIndex;
+
+        }
+
+
+        /*
+         * ======================================================
+         * 添加最后剩余的普通文字
+         * ======================================================
+         */
+
+        if (
+            lastIndex < text.length
+        ) {
+
+            const remainingText =
+                text.substring(
+                    lastIndex
+                );
+
+
+            fragment.appendChild(
+                createNormalText(
+                    remainingText
+                )
+            );
+
+        }
+
+
+        return fragment;
+
+    }
+
+
+    /*
+     * ==========================================================
+     * 没有输入
+     * ==========================================================
+     */
+
+    if (!text) {
+
+        content.textContent =
+            "请在 URL 中提供 text 参数";
+
+        return;
+
+    }
+
+
+    /*
+     * ==========================================================
+     * 渲染
+     * ==========================================================
+     */
+
+    content.appendChild(
+        parseText(text)
+    );
+
+
+})();
+
 </script>
+
 </body>
 </html>
